@@ -25,8 +25,6 @@ config_file='config_mirrorapi2.yml'
 CONFIG = yaml.load(open(config_file, 'r'), Loader=yaml.FullLoader)
 print(CONFIG)
 
-CACHE_FOLDER = CONFIG.get('cache_folder', './tool_response_cache') #加载cache文件
-
 from openai import OpenAI, AzureOpenAI
 if 'api_base' in CONFIG:
     OPENAI_API_BASE=CONFIG['api_base']
@@ -100,23 +98,6 @@ def get_virtual_response(request: Request, info: Info):
         tool_name_real = tool_name_original.split("_for_")[0]
     else:
         tool_name_real = tool_name_original
-    
-    # ===== 新增：查 cache =====
-    cache = {}
-    try:
-        cache_path = os.path.join(CACHE_FOLDER, standard_category, tool_name, api_name + ".json")
-        if os.path.exists(cache_path):
-            cache = json.load(open(cache_path, "r"))
-            if str(tool_input) in cache:
-                print(f"[CACHE HIT] {standard_category}/{tool_name}/{api_name}")
-                return cache[str(tool_input)]
-    except Exception as e:
-        print(f"[CACHE] load error: {e}")
-    
-    print(f"[CACHE MISS] {standard_category}/{tool_name}/{api_name}")
-    # ===========================
-    
-    
     data = {
         "category": standard_category,
         "tool_name": tool_name_real,

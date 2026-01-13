@@ -10,3 +10,5 @@ tools_folder: "/home/t653z659/StableToolBench/toolenv/toolenv2404_filtered"
 port: 12002
 #model: simulation-250123-qwen25-mixed
 model: "mirrorapi"   # 这里跟上面保持一致
+
+cache_folder: ./tool_response_cache #加一行cache看看会不会加速？
