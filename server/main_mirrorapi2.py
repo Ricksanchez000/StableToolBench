@@ -164,6 +164,20 @@ def get_virtual_response(request: Request, info: Info):
 
         
     result = fake_response_function_with_trained_simulator(tool_input, data, api_doc)
+
+    # ===== 保存到 cache =====
+    try:
+        result_dict = json.loads(result) if isinstance(result, str) else result
+        cache[str(tool_input)] = result_dict
+        cache_dir = os.path.join(CACHE_FOLDER, standard_category, tool_name)
+        os.makedirs(cache_dir, exist_ok=True)
+        with open(os.path.join(cache_dir, api_name + ".json"), "w") as f:
+            json.dump(cache, f, indent=2)
+        print(f"[CACHE SAVED] {standard_category}/{tool_name}/{api_name}")
+    except Exception as e:
+        print(f"[CACHE] save error: {e}")
+    # ========================
+
     print(f"fake result: {result}")
 
     if not isinstance(result, dict):
