@@ -166,16 +166,7 @@ def get_virtual_response(request: Request, info: Info):
     result = fake_response_function_with_trained_simulator(tool_input, data, api_doc)
 
     # ===== 保存到 cache =====
-    try:
-        result_dict = json.loads(result) if isinstance(result, str) else result
-        cache[str(tool_input)] = result_dict
-        cache_dir = os.path.join(CACHE_FOLDER, standard_category, tool_name)
-        os.makedirs(cache_dir, exist_ok=True)
-        with open(os.path.join(cache_dir, api_name + ".json"), "w") as f:
-            json.dump(cache, f, indent=2)
-        print(f"[CACHE SAVED] {standard_category}/{tool_name}/{api_name}")
-    except Exception as e:
-        print(f"[CACHE] save error: {e}")
+    save_cache(cache, tool_input, result, standard_category, tool_name, api_name)
     # ========================
 
     print(f"fake result: {result}")
@@ -324,7 +315,26 @@ Request:
         }
         return json.dumps(fake_error)
 
+def save_cache(cache, tool_input, result, standard_category, tool_name, api_name, save_folder=CACHE_FOLDER):
+    try:
+        if isinstance(result, dict):
+            cache[str(tool_input)] = result
+        elif isinstance(result, str):
+            try:
+                result_dict = json.loads(result)
+                cache[str(tool_input)] = result_dict
+            except Exception as e:
+                print(f"Load result failed: {e}")
+                return
 
+        if not os.path.exists(os.path.join(save_folder, standard_category)):
+            os.mkdir(os.path.join(save_folder, standard_category))
+        if not os.path.exists(os.path.join(save_folder, standard_category, tool_name)):
+            os.mkdir(os.path.join(save_folder, standard_category, tool_name))    
+        json.dump(cache, open(os.path.join(save_folder, standard_category, tool_name, api_name+".json"), "w"), indent=4)
+        print(f"[CACHE SAVED] {standard_category}/{tool_name}/{api_name}")
+    except Exception as e:
+        print(f"Save cache failed: {e}")
 
 
 

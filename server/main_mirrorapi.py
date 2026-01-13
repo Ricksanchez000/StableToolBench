@@ -162,6 +162,11 @@ def get_virtual_response(request: Request, info: Info):
 
         
     result = fake_response_function_with_trained_simulator(tool_input, data, api_doc)
+
+    # ===== 保存到 cache =====
+    save_cache(cache, tool_input, result, standard_category, tool_name, api_name)
+    # ========================
+
     print(f"fake result: {result}")
 
     if not isinstance(result, dict):
@@ -309,7 +314,26 @@ Request:
         return json.dumps(fake_error)
 
 
+def save_cache(cache, tool_input, result, standard_category, tool_name, api_name, save_folder=CACHE_FOLDER):
+    try:
+        if isinstance(result, dict):
+            cache[str(tool_input)] = result
+        elif isinstance(result, str):
+            try:
+                result_dict = json.loads(result)
+                cache[str(tool_input)] = result_dict
+            except Exception as e:
+                print(f"Load result failed: {e}")
+                return
 
+        if not os.path.exists(os.path.join(save_folder, standard_category)):
+            os.mkdir(os.path.join(save_folder, standard_category))
+        if not os.path.exists(os.path.join(save_folder, standard_category, tool_name)):
+            os.mkdir(os.path.join(save_folder, standard_category, tool_name))    
+        json.dump(cache, open(os.path.join(save_folder, standard_category, tool_name, api_name+".json"), "w"), indent=4)
+        print(f"[CACHE SAVED] {standard_category}/{tool_name}/{api_name}")
+    except Exception as e:
+        print(f"Save cache failed: {e}")
 
 
 if __name__ == "__main__":
